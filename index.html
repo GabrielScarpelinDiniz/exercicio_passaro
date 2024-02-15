@@ -18,6 +18,7 @@
 <body>
 
 <script>
+    //Objeto contendo as configurações do phaser, como o tipo de renderização, altura, largura e as funções da cena atual
     var config = {
         type: Phaser.AUTO,
         width: 800,
@@ -29,43 +30,63 @@
             update: update
         }
     };
-
+    //Instancia a classe Phaser.Game criando um novo objeto game, sendo o responsável por iniciar o jogo, passando o objeto config no construtor
     var game = new Phaser.Game(config);
-    let passarinho;
-    function preload() {
+    let passarinhos = {}; //Variável global do passarinho
+    const colors = [ 'Red', 'Purple', 'Green' ] //Array que cada as cores disponíveis de passarinhos
+    const colorsLength = colors.length //Como definido no autoestudo de boas práticas, sempre recomendado usar uma variável fixa com o tamanho do array
+    
+    //Função que é chamada antes para realizar o carregamento de imagens, áudios, etc
+    function preload() { 
         this.load.image('bg', 'assets/bg_space.png');
-        this.load.spritesheet('bird', 'assets/bird-red.png', { frameWidth: 75, frameHeight: 75 })
+        this.load.spritesheet(`bird${colors[0]}`, 'assets/bird-red.png', { frameWidth: 75, frameHeight: 75 })
+        this.load.spritesheet(`bird${colors[1]}`, 'assets/bird-purple.png', { frameWidth: 75, frameHeight: 75 })
+        this.load.spritesheet(`bird${colors[2]}`, 'assets/bird-green.png', { frameWidth: 75, frameHeight: 75 })
     }
-
+    //Função responsável por criar objetos usados na cena
+    //Essa função é executada apenas uma vez
     function create() {
         this.add.image(400, 300, 'bg').setScale(1.2);
-        passarinho = this.add.sprite(100, 300, 'bird').setScale(1.3)
-        this.anims.create({
-            key: 'fly',
-            frames: this.anims.generateFrameNumbers('bird', { start: 0, end: 7 }),
-            frameRate: 10,
-            repeat: -1
-        })
-        passarinho.rotation += 90
-        passarinho.anims.play('fly', true)
-        passarinho.ida = true
+        for (let i = 0; i < colorsLength; i++){
+            //Esse loop for cria três sprites de passarinho, um de cada cor. Acessando o índice do array "colors" e repete o mesmo para animação, montando as keys através de TEMPLATE STRING (interpolação de string com variável)
+            passarinhos[i] = this.add.sprite(100*(i+1), 50, `bird${colors[i]}`)
+            this.anims.create({
+                key: `fly${colors[i]}`,
+                frames: this.anims.generateFrameNumbers(`bird${colors[i]}`, { start: 0, end: 7 }),
+                frameRate: 10,
+                repeat: -1
+            })
+            passarinhos[i].rotation += 90 //rotaciona os três passarinhos em 90 graus
+            passarinhos[i].anims.play(`fly${colors[i]}`, false) //roda a animação
+            passarinhos[i].ida = true //Seta todos os passarinhos como INDO
+        }
     }
+    //Uma função chamada periodicamente para realizar comandos, chamada com intervalos em ms curtos
+    function update() { 
+        //  Lógica do passarinho subir e descer
 
-    function update() {
-        if (passarinho.y === 50) {
-            passarinho.setFlip(false, false)
-            passarinho.ida = true
+        for (let i = 0; i < colorsLength; i++){
+        //Loop for que verifica a lógica vista no tutorial para cada passarinho
+            if (passarinhos[i].y === 50) {
+                //Se o passarinho chegar no Y = 50, ele tira o flip da imagem e seta o ida como true
+                passarinhos[i].setFlip(false, false)
+                passarinhos[i].ida = true
+            }
+            if (passarinhos[i].y < 500 && passarinhos[i].ida){
+                //Se o Y do passarinho for menor que 500 e a ida for TRUE o passarinho deve andar para baixo
+                passarinhos[i].y += 5
+            }
+            if (passarinhos[i].y === 500 && passarinhos[i].ida){
+                //Quando ele chegar no Y = 500 e ele estiver indo para baixo, a imagem do passarinho vai sofrer um flip e a variável ida sera definida como FALSE
+                passarinhos[i].setFlip(true, false)
+                passarinhos[i].ida = !passarinhos[i].ida
+            }
+            if (passarinhos[i].y > 50 && !passarinhos[i].ida){
+                //Se o Y for maior que 50 e ele não estiver indo, significa que é para ele ir para cima (decrescer no y)
+                passarinhos[i].y -= 5
+            }
         }
-        if (passarinho.y < 500 && passarinho.ida){
-            passarinho.y += 5
-        }
-        if (passarinho.y === 500 && passarinho.ida){
-            passarinho.setFlip(true, false)
-            passarinho.ida = !passarinho.ida
-        }
-        if (passarinho.y > 50 && !passarinho.ida){
-            passarinho.y -= 5
-        }
+        
     }
 </script>
 
